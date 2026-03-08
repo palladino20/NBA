@@ -9,6 +9,10 @@ CATEGORY_ID = "DIC_kwDORhJD1s4C36mI"
 
 print("Fetching Reddit RSS...")
 
+headers = {
+    "Authorization": f"Bearer {GITHUB_TOKEN}"
+}
+
 feed = feedparser.parse("https://www.reddit.com/r/nba/.rss")
 
 for entry in feed.entries[:5]:

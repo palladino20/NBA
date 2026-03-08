@@ -1,35 +1,38 @@
 import requests
 import os
 
-# GitHub 정보
 TOKEN = os.environ["GITHUB_TOKEN"]
+
 REPOSITORY_ID = "R_kgDORhJD1g"
 CATEGORY_ID = "DIC_kwDORhJD1s4C36mI"
 
-# Reddit API
-url = "https://www.reddit.com/r/nba/hot.json?limit=5"
+url = "https://api.reddit.com/r/nba/hot?limit=10"
 
 headers = {
-    "User-Agent": "Mozilla/5.0 (compatible; NBACommunityBot/1.0)"
+    "User-Agent": "NBACommunityBot/1.0"
 }
 
-res = requests.get(url, headers=headers)
+res = requests.get(url, headers=headers, timeout=10)
 
 if res.status_code != 200:
     print("Reddit API error:", res.status_code)
+    print(res.text)
     exit()
 
 data = res.json()
 
-post = data["data"]["children"][0]["data"]
+posts = data["data"]["children"]
 
-title_en = post["title"]
-link = "https://reddit.com" + post["permalink"]
+for post in posts:
 
-# 간단 번역 (AI 없이)
-title_kr = "[Reddit 인기글] " + title_en
+    post_data = post["data"]
 
-body = f"""
+    title_en = post_data["title"]
+    link = "https://reddit.com" + post_data["permalink"]
+
+    title = "[Reddit NBA] " + title_en
+
+    body = f"""
 Reddit NBA 인기글
 
 제목:
@@ -41,37 +44,36 @@ Reddit NBA 인기글
 토론해봅시다.
 """
 
-# GitHub GraphQL
-query = """
-mutation($repositoryId:ID!, $categoryId:ID!, $title:String!, $body:String!) {
-  createDiscussion(input:{
-    repositoryId:$repositoryId
-    categoryId:$categoryId
-    title:$title
-    body:$body
-  }) {
-    discussion {
-      id
+    query = """
+    mutation($repositoryId:ID!, $categoryId:ID!, $title:String!, $body:String!) {
+      createDiscussion(input:{
+        repositoryId:$repositoryId
+        categoryId:$categoryId
+        title:$title
+        body:$body
+      }) {
+        discussion {
+          id
+        }
+      }
     }
-  }
-}
-"""
+    """
 
-variables = {
-"repositoryId": REPOSITORY_ID,
-"categoryId": CATEGORY_ID,
-"title": title_kr,
-"body": body
-}
+    variables = {
+        "repositoryId": REPOSITORY_ID,
+        "categoryId": CATEGORY_ID,
+        "title": title,
+        "body": body
+    }
 
-headers = {
-"Authorization": f"Bearer {TOKEN}"
-}
+    headers = {
+        "Authorization": f"Bearer {TOKEN}"
+    }
 
-response = requests.post(
-"https://api.github.com/graphql",
-json={"query": query, "variables": variables},
-headers=headers
-)
+    response = requests.post(
+        "https://api.github.com/graphql",
+        json={"query": query, "variables": variables},
+        headers=headers
+    )
 
-print(response.json())
+    print("Posted:", title)

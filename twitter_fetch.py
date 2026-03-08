@@ -1,47 +1,49 @@
 import requests
-import feedparser
 import os
 
-GITHUB_TOKEN = os.environ["GITHUB_TOKEN"]
+TOKEN = os.environ["GITHUB_TOKEN"]
 
 REPOSITORY_ID = "R_kgDORhJD1g"
 CATEGORY_ID = "DIC_kwDORhJD1s4C36RN"
 
-feed = feedparser.parse("https://nitter.net/anthonyVslater/rss")
+title = "Anthony Slater: Warriors update"
+body = """
+https://x.com/anthonyVslater
 
-latest = feed.entries[0]
+새 트윗이 올라왔습니다.
 
-title = "Anthony Slater 트윗"
-body = f"""
-{latest.title}
-
-원문:
-{latest.link}
-
-NBA 커뮤니티 의견은?
+내용:
+Warriors rotation update tonight.
 """
 
-query = f"""
-mutation {{
-  createDiscussion(
-    input: {{
-      repositoryId: "{REPOSITORY_ID}"
-      categoryId: "{CATEGORY_ID}"
-      title: "{title}"
-      body: \"\"\"{body}\"\"\"
-    }}
-  ) {{
-    discussion {{
-      url
-    }}
-  }}
-}}
+query = """
+mutation($repositoryId:ID!, $categoryId:ID!, $title:String!, $body:String!) {
+  createDiscussion(input:{
+    repositoryId:$repositoryId
+    categoryId:$categoryId
+    title:$title
+    body:$body
+  }) {
+    discussion {
+      id
+    }
+  }
+}
 """
+
+variables = {
+"repositoryId": REPOSITORY_ID,
+"categoryId": CATEGORY_ID,
+"title": title,
+"body": body
+}
+
+headers = {
+"Authorization": f"Bearer {TOKEN}"
+}
 
 requests.post(
-    "https://api.github.com/graphql",
-    json={"query": query},
-    headers={
-        "Authorization": f"Bearer {GITHUB_TOKEN}"
-    },
+"https://api.github.com/graphql",
+json={"query": query, "variables": variables},
+headers=headers
 )

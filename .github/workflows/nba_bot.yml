@@ -25,3 +25,7 @@ jobs:
       - run: python reddit_to_discussion.py
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - run: python twitter_fetch.py
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

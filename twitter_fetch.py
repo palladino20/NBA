@@ -11,12 +11,22 @@ headers = {
     "Authorization": f"Bearer {GITHUB_TOKEN}"
 }
 
-# 가져올 기자 목록
 accounts = [
     "ShamsCharania",
     "wojespn",
     "anthonyVslater"
 ]
+
+# 이미 올린 트윗 읽기
+posted = set()
+
+if os.path.exists("posted_tweets.txt"):
+    with open("posted_tweets.txt") as f:
+        posted = set(f.read().splitlines())
+
+def save_posted(link):
+    with open("posted_tweets.txt", "a") as f:
+        f.write(link + "\n")
 
 def post_to_github(title, body):
 
@@ -28,9 +38,7 @@ def post_to_github(title, body):
         title:$title,
         body:$body
       }) {
-        discussion {
-          id
-        }
+        discussion { id }
       }
     }
     """
@@ -48,8 +56,7 @@ def post_to_github(title, body):
         headers=headers
     )
 
-    print("Status:", r.status_code)
-    print(title)
+    print("Posted:", title)
 
 
 for account in accounts:
@@ -62,24 +69,31 @@ for account in accounts:
 
     root = ET.fromstring(res.content)
 
-    items = root.findall(".//item")[:3]
+    items = root.findall(".//item")[:5]
 
     for item in items:
 
         tweet = item.find("title").text
         link = item.find("link").text
 
+        # 중복 체크
+        if link in posted:
+            print("Skip duplicate:", link)
+            continue
+
         title = f"[NBA 기자 트윗] {tweet}"
 
         body = f"""
-NBA 기자 트윗 자동 수집
+NBA 기자 트윗
 
 {tweet}
 
 원문:
 {link}
 
-자동 봇
+자동 수집 봇
 """
 
         post_to_github(title, body)
+
+        save_posted(link)

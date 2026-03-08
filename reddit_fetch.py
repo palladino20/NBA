@@ -4,7 +4,7 @@ import os
 GITHUB_TOKEN = os.environ["GITHUB_TOKEN"]
 
 REPOSITORY_ID = "R_kgDORhJD1g"
-CATEGORY_ID = "DIC_kwDORhJD1s4C36RN"
+CATEGORY_ID = "DIC_kwDORhJD1s4C36mI"
 
 headers = {
     "Authorization": f"Bearer {GITHUB_TOKEN}"

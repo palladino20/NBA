@@ -1,18 +1,68 @@
 import requests
+import os
 
-url = "https://www.reddit.com/r/nba/hot.json"
+GITHUB_TOKEN = os.environ["GITHUB_TOKEN"]
 
-headers = {"User-Agent": "nba-bot"}
+REPOSITORY_ID = "R_kgDORhJD1g"
+CATEGORY_ID = "DIC_kwDORhJD1s4C36RN"
 
-res = requests.get(url, headers=headers)
+headers = {
+    "Authorization": f"Bearer {GITHUB_TOKEN}"
+}
+
+print("Fetching Reddit posts...")
+
+url = "https://www.reddit.com/r/nba/top.json?limit=5&t=day"
+
+res = requests.get(url, headers={"User-agent": "nba-bot"})
 data = res.json()
 
-post = data["data"]["children"][0]["data"]
+posts = data["data"]["children"]
 
-title = post["title"]
-link = post["url"]
+for post in posts:
 
-translated = "Reddit 인기글 번역: " + title
+    title = post["data"]["title"]
+    link = "https://reddit.com" + post["data"]["permalink"]
 
-print(translated)
-print(link)
+    new_title = "[Reddit NBA 인기글] " + title
+
+    body = f"""
+🔥 Reddit NBA 인기글
+
+{title}
+
+원문:
+{link}
+
+자동 번역/수집 봇
+"""
+
+    query = """
+    mutation($repositoryId: ID!, $categoryId: ID!, $title: String!, $body: String!) {
+      createDiscussion(input:{
+        repositoryId:$repositoryId,
+        categoryId:$categoryId,
+        title:$title,
+        body:$body
+      }) {
+        discussion {
+          id
+        }
+      }
+    }
+    """
+
+    variables = {
+        "repositoryId": REPOSITORY_ID,
+        "categoryId": CATEGORY_ID,
+        "title": new_title,
+        "body": body
+    }
+
+    r = requests.post(
+        "https://api.github.com/graphql",
+        json={"query": query, "variables": variables},
+        headers=headers
+    )
+
+    print("Posted:", new_title)

@@ -1,25 +1,26 @@
 import requests
 import os
-from datetime import datetime
 
-TOKEN = os.environ["GITHUB_TOKEN"]
+GITHUB_TOKEN = os.environ["GITHUB_TOKEN"]
 
 REPOSITORY_ID = "R_kgDORhJD1g"
 CATEGORY_ID = "DIC_kwDORhJD1s4C36RP"
 
-today = datetime.utcnow().strftime("%Y%m%d")
+headers = {
+    "Authorization": f"Bearer {GITHUB_TOKEN}"
+}
 
-url = f"https://cdn.nba.com/static/json/liveData/scoreboard/todaysScoreboard_00.json"
+print("Fetching NBA games...")
 
-print("Fetching NBA results...")
-
-res = requests.get(url)
-
-data = res.json()
+url = "https://cdn.nba.com/static/json/liveData/scoreboard/todaysScoreboard_00.json"
+data = requests.get(url).json()
 
 games = data["scoreboard"]["games"]
 
 for game in games:
+
+    if game["gameStatusText"] != "Final":
+        continue
 
     home = game["homeTeam"]["teamName"]
     away = game["awayTeam"]["teamName"]
@@ -27,28 +28,25 @@ for game in games:
     home_score = game["homeTeam"]["score"]
     away_score = game["awayTeam"]["score"]
 
-    status = game["gameStatusText"]
-
     title = f"[NBA 경기결과] {away} {away_score} - {home_score} {home}"
 
     body = f"""
-NBA 경기 결과
+🏀 NBA 경기 결과
 
 {away} {away_score}
 {home} {home_score}
 
-경기 상태
-{status}
+경기 종료
 
-토론해봅시다.
+NBA 자동 봇
 """
 
     query = """
-    mutation($repositoryId:ID!, $categoryId:ID!, $title:String!, $body:String!) {
+    mutation($repositoryId: ID!, $categoryId: ID!, $title: String!, $body: String!) {
       createDiscussion(input:{
-        repositoryId:$repositoryId
-        categoryId:$categoryId
-        title:$title
+        repositoryId:$repositoryId,
+        categoryId:$categoryId,
+        title:$title,
         body:$body
       }) {
         discussion {
@@ -65,14 +63,16 @@ NBA 경기 결과
         "body": body
     }
 
-    headers = {
-        "Authorization": f"Bearer {TOKEN}"
-    }
-
     r = requests.post(
         "https://api.github.com/graphql",
         json={"query": query, "variables": variables},
         headers=headers
     )
 
-    print("Posted:", title)
+    print("Status:", r.status_code)
+    print("Response:", r.text)
+
+    if r.status_code == 200:
+        print("Posted:", title)
+    else:
+        print("Failed:", title)

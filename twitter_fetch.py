@@ -7,10 +7,6 @@ GITHUB_TOKEN = os.environ["GITHUB_TOKEN"]
 REPOSITORY_ID = "R_kgDORhJD1g"
 CATEGORY_ID = "DIC_kwDORhJD1s4C36RN"
 
-headers = {
-    "Authorization": f"Bearer {GITHUB_TOKEN}"
-}
-
 accounts = [
     "ShamsCharania",
     "wojespn",
@@ -91,3 +87,4 @@ NBA 기자 트윗
     except Exception as e:
         print("Error:", account, e)
         continue
+

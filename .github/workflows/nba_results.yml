@@ -1,0 +1,23 @@
+name: NBA Results Bot
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - run: pip install requests
+
+      - run: python nba_results_to_discussion.py
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

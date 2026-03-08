@@ -29,3 +29,11 @@ jobs:
       - run: python twitter_fetch.py
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Commit tweet history
+        run: |
+          git config --global user.name "bot"
+          git config --global user.email "bot@github.com"
+          git add posted_tweets.txt
+          git commit -m "update tweet history" || echo "no changes"
+          git push

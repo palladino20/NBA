@@ -1,27 +1,20 @@
 import requests
 import os
+import feedparser
 
 TOKEN = os.environ["GITHUB_TOKEN"]
 
 REPOSITORY_ID = "R_kgDORhJD1g"
 CATEGORY_ID = "DIC_kwDORhJD1s4C36mI"
 
-url = "https://api.reddit.com/r/nba/hot?limit=5"
+print("Fetching Reddit RSS...")
 
-headers = {
-    "User-Agent": "NBACommunityBot/1.0"
-}
+feed = feedparser.parse("https://www.reddit.com/r/nba/.rss")
 
-res = requests.get(url, headers=headers)
+for entry in feed.entries[:5]:
 
-data = res.json()
-
-posts = data["data"]["children"]
-
-for post in posts:
-
-    title_en = post["data"]["title"]
-    link = "https://reddit.com" + post["data"]["permalink"]
+    title_en = entry.title
+    link = entry.link
 
     title = "[Reddit NBA] " + title_en
 
@@ -69,4 +62,4 @@ Reddit NBA 인기글
         headers=headers
     )
 
-    print(r.text)
+    print("Posted:", title)

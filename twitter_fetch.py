@@ -63,11 +63,19 @@ for account in accounts:
 
     print("Fetching:", account)
 
-    rss_url = f"https://rsshub.app/twitter/user/{account}"
+    rss_url = f"https://nitter.net/{account}/rss"
 
     res = requests.get(rss_url)
 
-    root = ET.fromstring(res.content)
+    if res.status_code != 200:
+        print("RSS fetch failed:", account)
+        continue
+
+    try:
+        root = ET.fromstring(res.content)
+    except:
+        print("XML parse error:", account)
+        continue
 
     items = root.findall(".//item")[:5]
 
@@ -97,3 +105,4 @@ NBA 기자 트윗
         post_to_github(title, body)
 
         save_posted(link)
+

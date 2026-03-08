@@ -54,32 +54,30 @@ for account in accounts:
 
     rss_url = f"https://nitter.net/{account}/rss"
 
-    res = requests.get(rss_url)
-
-    if res.status_code != 200:
-        print("RSS fetch failed:", account)
-        continue
-
-    if "xml" not in res.headers.get("content-type", ""):
-        print("Not XML response:", account)
-        continue
-
     try:
-        root = ET.fromstring(res.content)
-    except Exception as e:
-        print("XML parse error:", account)
-        continue
 
-    items = root.findall(".//item")[:3]
+        res = requests.get(rss_url, timeout=10)
 
-    for item in items:
+        if res.status_code != 200:
+            print("RSS failed:", account)
+            continue
 
-        tweet = item.find("title").text
-        link = item.find("link").text
+        try:
+            root = ET.fromstring(res.content)
+        except:
+            print("XML parse failed:", account)
+            continue
 
-        title = f"[NBA 기자 트윗] {tweet}"
+        items = root.findall(".//item")[:3]
 
-        body = f"""
+        for item in items:
+
+            tweet = item.find("title").text
+            link = item.find("link").text
+
+            title = f"[NBA 기자 트윗] {tweet}"
+
+            body = f"""
 NBA 기자 트윗
 
 {tweet}
@@ -88,4 +86,8 @@ NBA 기자 트윗
 {link}
 """
 
-        post_to_github(title, body)
+            post_to_github(title, body)
+
+    except Exception as e:
+        print("Error:", account, e)
+        continue
